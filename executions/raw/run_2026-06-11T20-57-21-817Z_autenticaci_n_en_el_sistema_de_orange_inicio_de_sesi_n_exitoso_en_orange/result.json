@@ -1,0 +1,127 @@
+{
+  "featureName": "Autenticación en el sistema de Orange",
+  "scenarioName": "Inicio de sesión exitoso en Orange",
+  "steps": [
+    {
+      "stepText": "el usuario se encuentra en la plataforma de Orange",
+      "instructions": [
+        {
+          "instruction": "Navega a la URL de la plataforma de Orange: https://opensource-demo.orangehrmlive.com/web/index.php/auth/login",
+          "actions": [
+            {
+              "playwright": {
+                "tool": "browser_navigate",
+                "arguments": {
+                  "url": "https://opensource-demo.orangehrmlive.com/web/index.php/auth/login"
+                }
+              }
+            }
+          ],
+          "execution": {
+            "status": "success",
+            "actionExecuted": "browser_navigate",
+            "error": null,
+            "details": "### Ran Playwright code\n```js\nawait page.goto('https://opensource-demo.orangehrmlive.com/web/index.php/auth/login');\n```\n### Page\n- Page URL: https://opensource-demo.orangehrmlive.com/web/index.php/auth/login\n- Page Title: OrangeHRM\n### Snapshot\n- [Snapshot](.playwright-mcp\\page-2026-06-11T20-54-49-189Z.yml)"
+          }
+        }
+      ]
+    },
+    {
+      "stepText": "el usuario ingresa sus credenciales correctas",
+      "instructions": [
+        {
+          "instruction": "Escribe 'Admin' en el campo de texto Username",
+          "actions": [
+            {
+              "playwright": {
+                "tool": "browser_type",
+                "arguments": {
+                  "element": "//input[@name='username']",
+                  "target": "//input[@name='username']",
+                  "text": "Admin"
+                }
+              }
+            }
+          ],
+          "execution": {
+            "status": "success",
+            "actionExecuted": "browser_type",
+            "error": null,
+            "details": "### Ran Playwright code\n```js\nawait page.locator('//input[@name=\\'username\\']').fill('Admin');\n```"
+          }
+        },
+        {
+          "instruction": "Escribe 'admin123' en el campo de texto Password",
+          "actions": [
+            {
+              "playwright": {
+                "tool": "browser_type",
+                "arguments": {
+                  "element": "//input[@name='password']",
+                  "target": "//input[@name='password']",
+                  "text": "admin123"
+                }
+              }
+            }
+          ],
+          "execution": {
+            "status": "success",
+            "actionExecuted": "browser_type",
+            "error": null,
+            "details": "### Ran Playwright code\n```js\nawait page.locator('//input[@name=\\'password\\']').fill('admin123');\n```"
+          }
+        },
+        {
+          "instruction": "Da click en el botón Login",
+          "actions": [
+            {
+              "playwright": {
+                "tool": "browser_click",
+                "arguments": {
+                  "target": "//button[contains(@class, 'oxd-button')]"
+                }
+              }
+            }
+          ],
+          "execution": {
+            "status": "success",
+            "actionExecuted": "browser_click",
+            "error": null,
+            "details": "### Ran Playwright code\n```js\nawait page.locator('//button[contains(@class, \\'oxd-button\\')]').click();\n```\n### Page\n- Page URL: https://opensource-demo.orangehrmlive.com/web/index.php/dashboard/index\n- Page Title: OrangeHRM\n### Snapshot\n- [Snapshot](.playwright-mcp\\page-2026-06-11T20-56-33-690Z.yml)"
+          }
+        }
+      ]
+    },
+    {
+      "stepText": "el sistema permite el acceso Orange",
+      "instructions": [
+        {
+          "instruction": "Verifica que este el texto 'Dashboard'",
+          "actions": [
+            {
+              "playwright": {
+                "tool": "browser_evaluate",
+                "arguments": {
+                  "function": "(el) => el.textContent.includes('Dashboard')",
+                  "target": "//h6[text()='Dashboard']"
+                }
+              }
+            }
+          ],
+          "execution": {
+            "status": "success",
+            "actionExecuted": "browser_evaluate",
+            "error": null,
+            "details": "### Result\ntrue\n### Ran Playwright code\n```js\nawait page.locator('//h6[text()=\\'Dashboard\\']').evaluate('(el) => el.textContent.includes(\\'Dashboard\\')');\n```"
+          }
+        }
+      ]
+    }
+  ],
+  "executionSummary": {
+    "success": true,
+    "executionTimeMs": 172751,
+    "errorSummary": null
+  },
+  "lastSuccessAt": "2026-06-11T20:57:21.810488+00:00"
+}

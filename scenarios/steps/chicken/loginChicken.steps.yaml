@@ -1,0 +1,17 @@
+"el usuario se encuentra en la plataforma de Chicken":
+  instructions:
+    - "Navega a la URL de la plataforma de KFC: https://www.kfc.co/"
+    
+"el usuario hace la busqueda de 'Big Box'":
+  instructions:
+    - "Escribe 'Big Box' en el campo de busqueda"
+    - "Da click en la opción que dice: 'Big Box Original'"
+
+"el usuario agrega el producto 'Big Box Kentucky' al carrito":
+  instructions:
+    - "El usuario da click en el botón que dice: 'Agregar $ 28.900'"
+
+
+"se observa el mensaje 'Gracias'":
+  instructions:
+    - "Da click en el botón que dice: 'Gracias'"

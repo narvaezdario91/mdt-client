@@ -1,0 +1,59 @@
+"el usuario navega a la tienda eShop":
+  instructions:
+    - "Navega a la URL: https://192.168.1.7:7298"
+
+"el usuario se autentica en eShop":
+  instructions:
+    - "Navega a la URL: https://192.168.1.7:7298"
+    - "Da click en el enlace con icono que permite el inicio de sesión"
+    - "Escribe 'alice' en el campo Username"
+    - "Escribe 'Pass123$' en el campo Password"
+    - "Da click en el botón con texto 'Login'"
+
+"el usuario inicia sesión con usuario {username} y contraseña {password}":
+  instructions:
+    - "Navega a la URL: https://192.168.1.7:7298"
+    - "Da click en el enlace con icono que permite el inicio de sesión"
+    - "Escribe '{username}' en el campo Username"
+    - "Escribe '{password}' en el campo Password"
+    - "Da click en el botón con texto 'Login'"
+
+"el sistema permite el acceso al catálogo":
+  instructions:
+    - "Verifica que se muestre el texto 'Ready for a new adventure?'"
+
+# --- Pasos de Navegación del Catálogo ---
+
+"el usuario selecciona el producto {product}":
+  instructions:
+    - "Da click en el enlace con texto '{product}'"
+
+"el sistema muestra el detalle del producto {product}":
+  instructions:
+    - "Verifica que se muestre el texto '{product}'"
+
+# --- Pasos del Carrito ---
+
+"el usuario agrega el producto al carrito":
+  instructions:
+    - "Da click en el botón con texto 'Add to shopping bag'"
+
+"el usuario agrega {product} al carrito":
+  instructions:
+    - "Da click en el enlace con texto '{product}'"
+    - "Da click en el botón con texto 'Add to shopping bag'"
+
+"el carrito muestra el producto {product}":
+  instructions:
+    - "Da click en el enlace con icono de carrito en la barra de navegación"
+    - "Verifica que se muestre el texto '{product}'"
+
+"el usuario cambia la cantidad a {quantity} y actualiza":
+  instructions:
+    - "Da click en el enlace con icono de carrito en la barra de navegación"
+    - "Escribe '{quantity}' en el campo de cantidad del primer producto en el carrito"
+    - "Da click en el botón con texto 'Update'"
+
+"el carrito muestra el mensaje {message}":
+  instructions:
+    - "Verifica que se muestre el texto '{message}'"

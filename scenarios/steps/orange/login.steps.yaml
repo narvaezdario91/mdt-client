@@ -1,0 +1,13 @@
+"el usuario se encuentra en la plataforma de Orange":
+  instructions:
+    - "Navega a la URL de la plataforma de Orange: https://opensource-demo.orangehrmlive.com/web/index.php/auth/login"
+
+"el usuario ingresa sus credenciales correctas":
+  instructions:
+    - "Escribe 'Admin' en el campo de texto Username"
+    - "Escribe 'admin123' en el campo de texto Password"
+    - "Da click en el botón Login"
+
+"el sistema permite el acceso Orange":
+  instructions:
+    - "Verifica que este el texto 'Dashboard'"
