@@ -11,6 +11,20 @@ import { MDTConfig } from '../models/config';
 
 const program = new Command();
 
+function findFeaturesRecursive(dirPath: string): string[] {
+  let results: string[] = [];
+  const entries = fs.readdirSync(dirPath, { withFileTypes: true });
+  for (const entry of entries) {
+    const fullPath = path.join(dirPath, entry.name);
+    if (entry.isDirectory()) {
+      results = results.concat(findFeaturesRecursive(fullPath));
+    } else if (entry.isFile() && entry.name.endsWith('.feature')) {
+      results.push(fullPath);
+    }
+  }
+  return results;
+}
+
 program
   .name('bdd-orchestrator')
   .description('MDT Node.js BDD Orchestrator CLI')
@@ -65,10 +79,23 @@ program
 
     try {
       // 1. Compile
-      console.log(`\n⚙️  Compiling feature...`);
+      console.log(`\n⚙️  Compiling feature(s)...`);
       const compiler = new FeatureCompiler(options.steps, options.mcpConfig);
-      const rawPayloads = compiler.compile(options.features);
-      console.log(`✅ Found ${rawPayloads.length} scenario(s).`);
+      
+      let featureFiles: string[] = [];
+      const stat = fs.statSync(options.features);
+      if (stat.isDirectory()) {
+        featureFiles = findFeaturesRecursive(options.features);
+      } else {
+        featureFiles = [options.features];
+      }
+
+      let rawPayloads: any[] = [];
+      for (const file of featureFiles) {
+        rawPayloads.push(...compiler.compile(file));
+      }
+
+      console.log(`✅ Found ${rawPayloads.length} scenario(s) across ${featureFiles.length} file(s).`);
 
       const apiClient = new ApiClient(options.apiUrl);
       const storage = new Storage({
