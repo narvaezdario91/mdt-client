@@ -37,11 +37,14 @@ program
     }
 
     const options = {
-      features: cliOptions.features || fileConfig.featuresDir,
-      steps: cliOptions.steps || fileConfig.stepsDir,
-      apiUrl: cliOptions.apiUrl || fileConfig.apiUrl || 'http://localhost:8000',
-      useCache: cliOptions.cache !== false ? (fileConfig.useCache !== false) : false,
-      report: cliOptions.report
+      features: cliOptions.features || fileConfig.paths?.features,
+      steps: cliOptions.steps || fileConfig.paths?.steps,
+      apiUrl: cliOptions.apiUrl || fileConfig.api?.url || 'http://localhost:8000',
+      useCache: cliOptions.cache !== false ? (fileConfig.execution?.useCache !== false) : false,
+      report: cliOptions.report || fileConfig.execution?.report,
+      mcpConfig: fileConfig.mcp,
+      reportsDir: fileConfig.paths?.reports,
+      cacheDir: fileConfig.paths?.cache
     };
 
     if (!options.features || !options.steps) {
@@ -63,12 +66,16 @@ program
     try {
       // 1. Compile
       console.log(`\n⚙️  Compiling feature...`);
-      const compiler = new FeatureCompiler(options.steps);
+      const compiler = new FeatureCompiler(options.steps, options.mcpConfig);
       const rawPayloads = compiler.compile(options.features);
       console.log(`✅ Found ${rawPayloads.length} scenario(s).`);
 
       const apiClient = new ApiClient(options.apiUrl);
-      const storage = new Storage('executions', runId);
+      const storage = new Storage({
+        reportsDir: options.reportsDir,
+        cacheDir: options.cacheDir,
+        runId: runId
+      });
 
       for (const rawPayload of rawPayloads) {
         const scenarioName = rawPayload.cache_content?.scenarioName || 'unknown_scenario';

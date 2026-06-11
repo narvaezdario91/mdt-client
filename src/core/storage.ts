@@ -2,12 +2,14 @@ import * as fs from 'fs/promises';
 import * as path from 'path';
 
 export class Storage {
-  private baseDir: string;
+  private reportsDir: string;
+  private cacheDir: string;
   private runId?: string;
 
-  constructor(baseDir: string = 'executions', runId?: string) {
-    this.baseDir = path.resolve(process.cwd(), baseDir);
-    this.runId = runId;
+  constructor(options: { reportsDir?: string, cacheDir?: string, runId?: string } = {}) {
+    this.reportsDir = path.resolve(process.cwd(), options.reportsDir || 'executions/reports');
+    this.cacheDir = path.resolve(process.cwd(), options.cacheDir || 'executions/cache');
+    this.runId = options.runId;
   }
 
   public async saveRawExecution(featureName: string, data: any): Promise<string> {
@@ -17,11 +19,11 @@ export class Storage {
     let fileName: string;
 
     if (this.runId) {
-      runDir = path.join(this.baseDir, 'reports', this.runId, 'raw');
+      runDir = path.join(this.reportsDir, this.runId, 'raw');
       fileName = `${safeName}.json`;
     } else {
       const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-      runDir = path.join(this.baseDir, 'raw', `run_${timestamp}_${safeName}`);
+      runDir = path.join(this.reportsDir, 'raw', `run_${timestamp}_${safeName}`);
       fileName = 'result.json';
     }
     
@@ -37,7 +39,7 @@ export class Storage {
     if (!this.runId) {
       throw new Error('runId is required to get raw executions');
     }
-    const rawDir = path.join(this.baseDir, 'reports', this.runId, 'raw');
+    const rawDir = path.join(this.reportsDir, this.runId, 'raw');
     
     try {
       const files = await fs.readdir(rawDir);
@@ -62,19 +64,19 @@ export class Storage {
     if (!this.runId) {
       throw new Error('runId is required to get reports dir');
     }
-    return path.join(this.baseDir, 'reports', this.runId);
+    return path.join(this.reportsDir, this.runId);
   }
 
   public async saveCache(relativePath: string, featureName: string, scenarioName: string, data: any): Promise<string> {
     const safeFeatureName = featureName.replace(/[^a-z0-9]/gi, '_').toLowerCase();
     const safeScenarioName = scenarioName.replace(/[^a-z0-9]/gi, '_').toLowerCase();
     
-    // Create nested directory: executions/cache/<relativePath>/<safeFeatureName>
-    const cacheDir = path.join(this.baseDir, 'cache', relativePath, safeFeatureName);
-    await fs.mkdir(cacheDir, { recursive: true });
+    // Create nested directory
+    const fullCacheDir = path.join(this.cacheDir, relativePath, safeFeatureName);
+    await fs.mkdir(fullCacheDir, { recursive: true });
 
     // File: <safeScenarioName>.json
-    const filePath = path.join(cacheDir, `${safeScenarioName}.json`);
+    const filePath = path.join(fullCacheDir, `${safeScenarioName}.json`);
     await fs.writeFile(filePath, JSON.stringify(data, null, 2), 'utf8');
 
     return filePath;
@@ -84,7 +86,7 @@ export class Storage {
     const safeFeatureName = featureName.replace(/[^a-z0-9]/gi, '_').toLowerCase();
     const safeScenarioName = scenarioName.replace(/[^a-z0-9]/gi, '_').toLowerCase();
     
-    const filePath = path.join(this.baseDir, 'cache', relativePath, safeFeatureName, `${safeScenarioName}.json`);
+    const filePath = path.join(this.cacheDir, relativePath, safeFeatureName, `${safeScenarioName}.json`);
     
     try {
       const content = await fs.readFile(filePath, 'utf8');

@@ -6,10 +6,16 @@ import { Payload, Step, Instruction } from '../models/payload.schema';
 export class FeatureCompiler {
   private gherkinParser: GherkinParser;
   private yamlResolver: YamlResolver;
+  private mcpConfig: Record<string, any>;
 
-  constructor(stepsDir: string) {
+  constructor(stepsDir: string, mcpConfig?: Record<string, any>) {
     this.gherkinParser = new GherkinParser();
     this.yamlResolver = new YamlResolver(stepsDir);
+    this.mcpConfig = mcpConfig || {
+      type: "stdio",
+      command: "npx",
+      args: ["-y", "@playwright/mcp"]
+    };
   }
 
   public compile(featureFilePath: string): Payload[] {
@@ -55,11 +61,7 @@ export class FeatureCompiler {
           createdAt: new Date().toISOString(),
           steps,
         },
-        mcp_config: {
-          type: "stdio",
-          command: "npx",
-          args: ["-y", "@playwright/mcp"]
-        }
+        mcp_config: this.mcpConfig
       });
     }
 

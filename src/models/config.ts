@@ -1,6 +1,21 @@
 export interface MDTConfig {
-  apiUrl?: string;
-  featuresDir?: string;
-  stepsDir?: string;
-  useCache?: boolean;
+  api?: {
+    url?: string;
+  };
+  paths?: {
+    features?: string;
+    steps?: string;
+    reports?: string;
+    cache?: string;
+  };
+  execution?: {
+    useCache?: boolean;
+    report?: string;
+  };
+  mcp?: {
+    type?: string;
+    command?: string;
+    args?: string[];
+    [key: string]: any;
+  };
 }
