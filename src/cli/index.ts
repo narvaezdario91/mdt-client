@@ -4,6 +4,7 @@ import { FeatureCompiler } from '../core/compiler';
 import { ApiClient } from '../core/api-client';
 import { Storage } from '../core/storage';
 import { PayloadSchema } from '../models/payload.schema';
+import * as path from 'path';
 
 const program = new Command();
 
@@ -56,6 +57,14 @@ program
         console.log(`💾 Saving results...`);
         const savedPath = await storage.saveRawExecution(`${featureName}_${scenarioName}`, result);
         console.log(`🎉 Execution completed. Raw results saved to:\n   ${savedPath}`);
+
+        // 5. Save Cache if successful
+        if (result.executionSummary?.success === true) {
+          const relativePath = path.dirname(path.relative(process.cwd(), options.features));
+          console.log(`🌟 Scenario successful. Saving Golden Copy to cache...`);
+          const cachePath = await storage.saveCache(relativePath, featureName, scenarioName, result);
+          console.log(`✅ Golden Copy saved to:\n   ${cachePath}`);
+        }
       }
 
       // 5. Generate Report if requested

@@ -64,4 +64,19 @@ export class Storage {
     }
     return path.join(this.baseDir, 'reports', this.runId);
   }
+
+  public async saveCache(relativePath: string, featureName: string, scenarioName: string, data: any): Promise<string> {
+    const safeFeatureName = featureName.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+    const safeScenarioName = scenarioName.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+    
+    // Create nested directory: executions/cache/<relativePath>/<safeFeatureName>
+    const cacheDir = path.join(this.baseDir, 'cache', relativePath, safeFeatureName);
+    await fs.mkdir(cacheDir, { recursive: true });
+
+    // File: <safeScenarioName>.json
+    const filePath = path.join(cacheDir, `${safeScenarioName}.json`);
+    await fs.writeFile(filePath, JSON.stringify(data, null, 2), 'utf8');
+
+    return filePath;
+  }
 }
