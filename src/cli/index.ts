@@ -18,11 +18,17 @@ program
   .requiredOption('-f, --features <path>', 'Path to the .feature file')
   .requiredOption('-s, --steps <path>', 'Path to the directory containing .steps.yaml files')
   .option('-u, --api-url <url>', 'Execution API URL', 'http://localhost:8000')
+  .option('--report <format>', 'Generate a specific report format after execution (e.g., cucumber)')
   .action(async (options) => {
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const runId = `run_${timestamp}`;
+
     console.log(`🚀 Starting BDD Orchestrator...`);
     console.log(`- Feature: ${options.features}`);
     console.log(`- Steps Dir: ${options.steps}`);
     console.log(`- API URL: ${options.apiUrl}`);
+    console.log(`- Run ID: ${runId}`);
+    if (options.report) console.log(`- Report: ${options.report}`);
 
     try {
       // 1. Compile
@@ -32,7 +38,7 @@ program
       console.log(`✅ Found ${rawPayloads.length} scenario(s).`);
 
       const apiClient = new ApiClient(options.apiUrl);
-      const storage = new Storage();
+      const storage = new Storage('executions', runId);
 
       for (const rawPayload of rawPayloads) {
         const scenarioName = rawPayload.cache_content?.scenarioName || 'unknown_scenario';
@@ -50,6 +56,16 @@ program
         console.log(`💾 Saving results...`);
         const savedPath = await storage.saveRawExecution(`${featureName}_${scenarioName}`, result);
         console.log(`🎉 Execution completed. Raw results saved to:\n   ${savedPath}`);
+      }
+
+      // 5. Generate Report if requested
+      if (options.report === 'cucumber') {
+        console.log(`\n📊 Generating Cucumber report...`);
+        const { CucumberReporter } = require('../reporters/cucumber');
+        const reporter = new CucumberReporter(storage.getReportsDir());
+        const rawExecutions = await storage.getRawExecutions();
+        const reportPath = await reporter.generateReport(rawExecutions);
+        console.log(`✅ Cucumber report successfully generated at:\n   ${reportPath}`);
       }
 
     } catch (error: any) {

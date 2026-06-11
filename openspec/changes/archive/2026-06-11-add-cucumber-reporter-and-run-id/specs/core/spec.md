@@ -1,4 +1,4 @@
-## ADDED Requirements
+## MODIFIED Requirements
 
 ### Requirement: Compilación y Orquestación BDD
 El orquestador SHALL ser capaz de transformar escenarios BDD en instrucciones ejecutables y orquestarlas vía HTTP, agrupando sus resultados.
