@@ -79,4 +79,21 @@ export class Storage {
 
     return filePath;
   }
+
+  public async getCache(relativePath: string, featureName: string, scenarioName: string): Promise<any | null> {
+    const safeFeatureName = featureName.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+    const safeScenarioName = scenarioName.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+    
+    const filePath = path.join(this.baseDir, 'cache', relativePath, safeFeatureName, `${safeScenarioName}.json`);
+    
+    try {
+      const content = await fs.readFile(filePath, 'utf8');
+      return JSON.parse(content);
+    } catch (error: any) {
+      if (error.code === 'ENOENT') {
+        return null;
+      }
+      throw error;
+    }
+  }
 }

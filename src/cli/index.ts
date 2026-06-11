@@ -6,6 +6,9 @@ import { Storage } from '../core/storage';
 import { PayloadSchema } from '../models/payload.schema';
 import * as path from 'path';
 
+import * as fs from 'fs';
+import { MDTConfig } from '../models/config';
+
 const program = new Command();
 
 program
@@ -16,11 +19,36 @@ program
 program
   .command('run')
   .description('Run BDD scenarios')
-  .requiredOption('-f, --features <path>', 'Path to the .feature file')
-  .requiredOption('-s, --steps <path>', 'Path to the directory containing .steps.yaml files')
-  .option('-u, --api-url <url>', 'Execution API URL', 'http://localhost:8000')
+  .option('-f, --features <path>', 'Path to the .feature file')
+  .option('-s, --steps <path>', 'Path to the directory containing .steps.yaml files')
+  .option('-u, --api-url <url>', 'Execution API URL')
+  .option('--no-cache', 'Disable cache injection (Golden Copy)')
   .option('--report <format>', 'Generate a specific report format after execution (e.g., cucumber)')
-  .action(async (options) => {
+  .action(async (cliOptions) => {
+    // Read config
+    let fileConfig: MDTConfig = {};
+    const configPath = path.resolve(process.cwd(), 'mdt.config.json');
+    if (fs.existsSync(configPath)) {
+      try {
+        fileConfig = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+      } catch (e) {
+        console.warn('⚠️  Could not parse mdt.config.json');
+      }
+    }
+
+    const options = {
+      features: cliOptions.features || fileConfig.featuresDir,
+      steps: cliOptions.steps || fileConfig.stepsDir,
+      apiUrl: cliOptions.apiUrl || fileConfig.apiUrl || 'http://localhost:8000',
+      useCache: cliOptions.cache !== false ? (fileConfig.useCache !== false) : false,
+      report: cliOptions.report
+    };
+
+    if (!options.features || !options.steps) {
+      console.error('❌ Error: --features and --steps are required (via CLI or mdt.config.json)');
+      process.exit(1);
+    }
+
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
     const runId = `run_${timestamp}`;
 
@@ -29,6 +57,7 @@ program
     console.log(`- Steps Dir: ${options.steps}`);
     console.log(`- API URL: ${options.apiUrl}`);
     console.log(`- Run ID: ${runId}`);
+    console.log(`- Use Cache: ${options.useCache}`);
     if (options.report) console.log(`- Report: ${options.report}`);
 
     try {
@@ -47,13 +76,27 @@ program
         
         // 2. Validate using Zod
         console.log(`\n🔍 Validating payload for scenario: "${scenarioName}"...`);
-        const payload = PayloadSchema.parse(rawPayload);
+        let payload = PayloadSchema.parse(rawPayload);
 
-        // 3. Execute API
+        const relativePath = path.dirname(path.relative(process.cwd(), options.features));
+
+        // 3. Cache Replay
+        if (options.useCache) {
+          const cachedData = await storage.getCache(relativePath, featureName, scenarioName);
+          if (cachedData) {
+            console.log(`📦 Cache found for scenario "${scenarioName}". Attempting replay...`);
+            const { CacheReplay } = require('../core/cache-replay');
+            payload = CacheReplay.inject(payload, cachedData);
+          } else {
+            console.log(`ℹ️ No cache found for scenario "${scenarioName}".`);
+          }
+        }
+
+        // 4. Execute API
         console.log(`🌐 Sending payload to Execution API...`);
         const result = await apiClient.executeFeature(payload);
 
-        // 4. Save results
+        // 5. Save results
         console.log(`💾 Saving results...`);
         const savedPath = await storage.saveRawExecution(`${featureName}_${scenarioName}`, result);
         console.log(`🎉 Execution completed. Raw results saved to:\n   ${savedPath}`);
