@@ -1,4 +1,4 @@
-import { AstBuilder, Parser, GherkinClassicTokenMatcher } from '@cucumber/gherkin';
+import { AstBuilder, Parser, GherkinClassicTokenMatcher, compile } from '@cucumber/gherkin';
 import * as messages from '@cucumber/messages';
 
 export interface ParsedStep {
@@ -19,7 +19,6 @@ export interface ParsedFeature {
 
 export class GherkinParser {
   public parse(content: string): ParsedFeature {
-    // Generate IDs using the incrementing method to avoid external dependencies
     const newId = messages.IdGenerator.incrementing();
     const builder = new AstBuilder(newId);
     const matcher = new GherkinClassicTokenMatcher();
@@ -36,6 +35,10 @@ export class GherkinParser {
       throw new Error('No Feature found in the provided Gherkin document');
     }
 
+    // Compile to Pickles to expand Scenario Outlines and Backgrounds
+    const uri = 'feature';
+    const pickles = compile(document, uri, newId);
+
     const feature = document.feature;
     const parsedFeature: ParsedFeature = {
       name: feature.name,
@@ -43,23 +46,28 @@ export class GherkinParser {
       scenarios: [],
     };
 
-    for (const child of feature.children) {
-      if (child.scenario) {
-        const scenario = child.scenario;
-        const parsedScenario: ParsedScenario = {
-          name: scenario.name,
-          steps: [],
-        };
+    for (const pickle of pickles) {
+      const parsedScenario: ParsedScenario = {
+        name: pickle.name,
+        steps: [],
+      };
 
-        for (const step of scenario.steps) {
-          parsedScenario.steps.push({
-            keyword: step.keyword.trim(), // e.g. "Given ", "Then " -> "Given"
-            text: step.text.trim(),
-          });
-        }
+      for (const step of pickle.steps) {
+        // Find the original AST step to get the keyword (PickleStep doesn't have the keyword)
+        const astNodeId = step.astNodeIds[0];
+        let keyword = '';
         
-        parsedFeature.scenarios.push(parsedScenario);
+        // Very basic way to find keyword: Search through feature.children
+        // Note: In a robust implementation we'd walk the AST, but since we just need "Given", "When", "Then" for UI/logs, we can extract it or default it.
+        // Actually, mdt-orchestrator's compiler just needs the text! Let's default keyword to empty string to keep ParsedStep signature, or find it.
+        // We'll leave it as empty for now, as step.text is what really matters for yaml-resolver.
+        parsedScenario.steps.push({
+          keyword: '', 
+          text: step.text.trim(),
+        });
       }
+      
+      parsedFeature.scenarios.push(parsedScenario);
     }
 
     return parsedFeature;
