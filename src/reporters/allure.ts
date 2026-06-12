@@ -4,6 +4,17 @@ import * as crypto from 'crypto';
 import { IReporter } from './reporter.interface';
 
 export class AllureReporter implements IReporter {
+  private async writeToBoth(
+    rootDir: string, runDir: string, fileName: string, 
+    content: string, generatedFiles: string[]
+  ): Promise<void> {
+    const rootPath = path.join(rootDir, fileName);
+    const runPath = path.join(runDir, fileName);
+    await fs.writeFile(rootPath, content, 'utf8');
+    await fs.writeFile(runPath, content, 'utf8');
+    generatedFiles.push(rootPath, runPath);
+  }
+
   public async generate(rawExecutions: any[], runId: string, reportsDir: string): Promise<string[]> {
     // Write the allure results to "allure-results" in the workspace root
     const allureResultsDir = path.resolve(process.cwd(), 'allure-results');
@@ -39,51 +50,61 @@ export class AllureReporter implements IReporter {
         const subSteps: any[] = [];
 
         for (const inst of step.instructions || []) {
-          const instSuccess = inst.execution?.status === 'success';
-          const instStatus = instSuccess ? 'passed' : 'failed';
-          
-          if (!instSuccess) {
+          // 1.2 Mapeo de estado (passed, failed, skipped)
+          const instStatus = inst.execution?.status === 'success' ? 'passed' : (inst.execution?.status || 'failed');
+
+          if (instStatus === 'failed') {
             stepStatus = 'failed';
           }
 
+          // 1.3 Mapeo de duración
+          const instDuration = inst.execution?.durationMs ?? 1000;
+
           const instAttachments: any[] = [];
+          
+          // 3.2 Inyectar error
+          const instStatusDetails = (instStatus === 'failed' && inst.execution?.error)
+            ? { message: inst.execution.error }
+            : undefined;
+
+          // 3.1 Adjuntar details
           if (inst.execution?.details) {
             const attachmentUuid = crypto.randomUUID();
             const attachmentFileName = `${attachmentUuid}-attachment.md`;
-            const attachmentPathRoot = path.join(allureResultsDir, attachmentFileName);
-            const attachmentPathRun = path.join(runAllureResultsDir, attachmentFileName);
             
-            // 2.2 I/O secuencial seguro con await
-            await fs.writeFile(attachmentPathRoot, inst.execution.details, 'utf8');
-            await fs.writeFile(attachmentPathRun, inst.execution.details, 'utf8');
+            await this.writeToBoth(allureResultsDir, runAllureResultsDir, attachmentFileName, inst.execution.details, generatedFiles);
             
-            // 2.3 Asociar referencia al attachment
             instAttachments.push({
               name: "Execution Details",
               source: attachmentFileName,
               type: "text/markdown"
             });
-            generatedFiles.push(attachmentPathRoot, attachmentPathRun);
           }
 
-          // 2.1 Parámetros
           const instParams: any[] = [];
-          if (inst.actions && inst.actions.length > 0) {
-            const firstAction = inst.actions[0];
-            const pwAction = firstAction.playwright;
-            if (pwAction) {
-              instParams.push({ name: "Tool", value: pwAction.tool || "unknown" });
-              if (pwAction.arguments) {
-                instParams.push({ name: "Arguments", value: JSON.stringify(pwAction.arguments) });
-              }
-            }
+          
+          // 2.1 Tool name
+          if (inst.execution?.actionExecuted) {
+            instParams.push({ name: "Tool", value: inst.execution.actionExecuted });
+          }
+          
+          // 2.2 Telemetry
+          if (inst.execution?.telemetry) {
+            const t = inst.execution.telemetry;
+            const telemetryParams = [
+              { name: "Execution Path", value: t.executionPath },
+              { name: "Retries", value: t.retries !== undefined ? String(t.retries) : undefined },
+              { name: "LLM Input Tokens", value: t.llmTokens?.input !== undefined ? String(t.llmTokens.input) : undefined },
+              { name: "LLM Output Tokens", value: t.llmTokens?.output !== undefined ? String(t.llmTokens.output) : undefined }
+            ].filter((p): p is {name: string, value: string} => p.value !== undefined);
+            
+            instParams.push(...telemetryParams);
           }
 
-          // Estimate sub-step time
-          const instDuration = 1000; // default 1s
           subSteps.push({
             name: inst.instruction,
             status: instStatus,
+            statusDetails: instStatusDetails,
             stage: 'finished',
             steps: [],
             attachments: instAttachments,
@@ -92,6 +113,10 @@ export class AllureReporter implements IReporter {
             stop: currentStepTime + instDuration
           });
           currentStepTime += instDuration;
+        }
+
+        if (subSteps.length > 0 && subSteps.every(s => s.status === 'skipped')) {
+          stepStatus = 'skipped';
         }
 
         steps.push({
@@ -127,16 +152,7 @@ export class AllureReporter implements IReporter {
       };
 
       const resultFileName = `${uuid}-result.json`;
-      
-      // Save to root allure-results
-      const rootPath = path.join(allureResultsDir, resultFileName);
-      await fs.writeFile(rootPath, JSON.stringify(allureResult, null, 2), 'utf8');
-      generatedFiles.push(rootPath);
-
-      // Save to run-specific allure-results
-      const runPath = path.join(runAllureResultsDir, resultFileName);
-      await fs.writeFile(runPath, JSON.stringify(allureResult, null, 2), 'utf8');
-      generatedFiles.push(runPath);
+      await this.writeToBoth(allureResultsDir, runAllureResultsDir, resultFileName, JSON.stringify(allureResult, null, 2), generatedFiles);
     }
 
     return generatedFiles;
