@@ -92,7 +92,10 @@ program
 
       let rawPayloads: any[] = [];
       for (const file of featureFiles) {
-        rawPayloads.push(...compiler.compile(file));
+        const compiledPayloads = compiler.compile(file);
+        // Inject the original source file to calculate correct relative paths for caching
+        compiledPayloads.forEach((p: any) => p._sourceFile = file);
+        rawPayloads.push(...compiledPayloads);
       }
 
       console.log(`✅ Found ${rawPayloads.length} scenario(s) across ${featureFiles.length} file(s).`);
@@ -112,7 +115,9 @@ program
         console.log(`\n🔍 Validating payload for scenario: "${scenarioName}"...`);
         let payload = PayloadSchema.parse(rawPayload);
 
-        const relativePath = path.dirname(path.relative(process.cwd(), options.features));
+        // Calculate relativePath robustly based on the actual feature file, not options.features
+        const sourceFile = rawPayload._sourceFile || options.features;
+        const relativePath = path.dirname(path.relative(process.cwd(), sourceFile));
 
         // 3. Cache Replay
         if (options.useCache) {
@@ -128,7 +133,34 @@ program
 
         // 4. Execute API
         console.log(`🌐 Sending payload to Execution API...`);
-        const result = await apiClient.executeFeature(payload);
+        let result: any;
+        try {
+          result = await apiClient.executeFeature(payload);
+        } catch (apiErr: any) {
+          const jsonMatch = apiErr.message.match(/^API Error \[[^\]]+\]:\s*(.*)$/);
+          if (jsonMatch && jsonMatch[1]) {
+            try {
+              result = JSON.parse(jsonMatch[1]);
+              console.log(`⚠️ Scenario executed with failures (API returned an error).`);
+            } catch (parseErr) {
+              result = {
+                featureName,
+                scenarioName,
+                executionSummary: { success: false, executionTimeMs: 0, errorSummary: `API Error: ${apiErr.message}` },
+                steps: []
+              };
+              console.log(`⚠️ Scenario failed critically (parsing error).`);
+            }
+          } else {
+            result = {
+              featureName,
+              scenarioName,
+              executionSummary: { success: false, executionTimeMs: 0, errorSummary: `Network/API Error: ${apiErr.message}` },
+              steps: []
+            };
+            console.log(`⚠️ Scenario failed critically (Network/API).`);
+          }
+        }
 
         // 5. Save results
         console.log(`💾 Saving results...`);
@@ -137,7 +169,6 @@ program
 
         // 5. Save Cache if successful
         if (result.executionSummary?.success === true) {
-          const relativePath = path.dirname(path.relative(process.cwd(), options.features));
           console.log(`🌟 Scenario successful. Saving Golden Copy to cache...`);
           const cachePath = await storage.saveCache(relativePath, featureName, scenarioName, result);
           console.log(`✅ Golden Copy saved to:\n   ${cachePath}`);

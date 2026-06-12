@@ -71,7 +71,7 @@ export class Storage {
     const safeFeatureName = featureName.replace(/[^a-z0-9]/gi, '_').toLowerCase();
     const safeScenarioName = scenarioName.replace(/[^a-z0-9]/gi, '_').toLowerCase();
     
-    // Create nested directory
+    // Create nested directory using relativePath to maintain folder structure
     const fullCacheDir = path.join(this.cacheDir, relativePath, safeFeatureName);
     await fs.mkdir(fullCacheDir, { recursive: true });
 

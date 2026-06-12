@@ -1,9 +1,4 @@
-# Capability: cucumber-reporter
-
-## Purpose
-TBD
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Consolidación de resultados en formato Cucumber JSON
 El sistema SHALL leer todos los archivos JSON crudos agrupados bajo un Run ID y generar un reporte unificado en el formato estándar Cucumber JSON.

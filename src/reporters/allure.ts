@@ -46,6 +46,39 @@ export class AllureReporter implements IReporter {
             stepStatus = 'failed';
           }
 
+          const instAttachments: any[] = [];
+          if (inst.execution?.details) {
+            const attachmentUuid = crypto.randomUUID();
+            const attachmentFileName = `${attachmentUuid}-attachment.md`;
+            const attachmentPathRoot = path.join(allureResultsDir, attachmentFileName);
+            const attachmentPathRun = path.join(runAllureResultsDir, attachmentFileName);
+            
+            // 2.2 I/O secuencial seguro con await
+            await fs.writeFile(attachmentPathRoot, inst.execution.details, 'utf8');
+            await fs.writeFile(attachmentPathRun, inst.execution.details, 'utf8');
+            
+            // 2.3 Asociar referencia al attachment
+            instAttachments.push({
+              name: "Execution Details",
+              source: attachmentFileName,
+              type: "text/markdown"
+            });
+            generatedFiles.push(attachmentPathRoot, attachmentPathRun);
+          }
+
+          // 2.1 Parámetros
+          const instParams: any[] = [];
+          if (inst.actions && inst.actions.length > 0) {
+            const firstAction = inst.actions[0];
+            const pwAction = firstAction.playwright;
+            if (pwAction) {
+              instParams.push({ name: "Tool", value: pwAction.tool || "unknown" });
+              if (pwAction.arguments) {
+                instParams.push({ name: "Arguments", value: JSON.stringify(pwAction.arguments) });
+              }
+            }
+          }
+
           // Estimate sub-step time
           const instDuration = 1000; // default 1s
           subSteps.push({
@@ -53,8 +86,8 @@ export class AllureReporter implements IReporter {
             status: instStatus,
             stage: 'finished',
             steps: [],
-            attachments: [],
-            parameters: [],
+            attachments: instAttachments,
+            parameters: instParams,
             start: currentStepTime,
             stop: currentStepTime + instDuration
           });
