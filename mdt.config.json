@@ -10,11 +10,14 @@
   },
   "execution": {
     "useCache": true,
-    "report": "cucumber"
+    "report": "allure"
   },
   "mcp": {
     "type": "stdio",
     "command": "npx",
-    "args": ["-y", "@playwright/mcp"]
+    "args": [
+      "-y",
+      "@playwright/mcp"
+    ]
   }
 }

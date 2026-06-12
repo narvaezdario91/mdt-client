@@ -36,3 +36,7 @@ executions/
 *.njsproj
 *.sln
 *.sw?
+
+# Allure
+allure-results/
+allure-report/

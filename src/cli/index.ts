@@ -37,7 +37,7 @@ program
   .option('-s, --steps <path>', 'Path to the directory containing .steps.yaml files')
   .option('-u, --api-url <url>', 'Execution API URL')
   .option('--no-cache', 'Disable cache injection (Golden Copy)')
-  .option('--report <format>', 'Generate a specific report format after execution (e.g., cucumber)')
+  .option('--report <formats>', 'Generate specific report formats after execution (comma-separated, e.g., cucumber,allure,html)')
   .action(async (cliOptions) => {
     // Read config
     let fileConfig: MDTConfig = {};
@@ -144,14 +144,35 @@ program
         }
       }
 
-      // 5. Generate Report if requested
-      if (options.report === 'cucumber') {
-        console.log(`\n📊 Generating Cucumber report...`);
-        const { CucumberReporter } = require('../reporters/cucumber');
-        const reporter = new CucumberReporter(storage.getReportsDir());
-        const rawExecutions = await storage.getRawExecutions();
-        const reportPath = await reporter.generateReport(rawExecutions);
-        console.log(`✅ Cucumber report successfully generated at:\n   ${reportPath}`);
+      // Always save raw-executions.json in the reports run directory
+      const rawExecutions = await storage.getRawExecutions();
+      const rawExecutionsPath = path.join(storage.getReportsDir(), 'raw-executions.json');
+      fs.writeFileSync(rawExecutionsPath, JSON.stringify(rawExecutions, null, 2), 'utf8');
+      console.log(`✅ Raw executions log successfully saved to:\n   ${rawExecutionsPath}`);
+
+      // Generate Reports if requested
+      const reportFormats = options.report
+        ? options.report.split(',').map((s: string) => s.trim()).filter((s: string) => s.length > 0)
+        : [];
+
+      if (reportFormats.length > 0) {
+        console.log(`\n📊 Generating reports for formats: ${reportFormats.join(', ')}...`);
+        const { ReporterFactory } = require('../reporters/factory');
+        const reporters = ReporterFactory.getReporters(reportFormats);
+
+        for (const reporter of reporters) {
+          const reporterName = reporter.constructor.name;
+          console.log(`🔹 Running ${reporterName}...`);
+          try {
+            const reportPaths = await reporter.generate(rawExecutions, runId, storage.getReportsDir());
+            console.log(`   Generated:`);
+            for (const p of reportPaths) {
+              console.log(`   - ${p}`);
+            }
+          } catch (repError: any) {
+            console.error(`❌ Error generating report with ${reporterName}: ${repError.message}`);
+          }
+        }
       }
 
     } catch (error: any) {

@@ -1,14 +1,9 @@
 import * as fs from 'fs/promises';
 import * as path from 'path';
+import { IReporter } from './reporter.interface';
 
-export class CucumberReporter {
-  private reportsDir: string;
-
-  constructor(reportsDir: string) {
-    this.reportsDir = reportsDir;
-  }
-
-  public async generateReport(rawExecutions: any[]): Promise<string> {
+export class CucumberReporter implements IReporter {
+  public async generate(rawExecutions: any[], runId: string, reportsDir: string): Promise<string[]> {
     const report: any[] = [];
 
     // Group executions by featureName
@@ -61,8 +56,8 @@ export class CucumberReporter {
       report.push(featureElement);
     }
 
-    const reportPath = path.join(this.reportsDir, 'cucumber-report.json');
+    const reportPath = path.join(reportsDir, 'cucumber-report.json');
     await fs.writeFile(reportPath, JSON.stringify(report, null, 2), 'utf8');
-    return reportPath;
+    return [reportPath];
   }
 }
