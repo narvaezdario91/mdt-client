@@ -70,14 +70,14 @@ export class AllureReporter implements IReporter {
           // 3.1 Adjuntar details
           if (inst.execution?.details) {
             const attachmentUuid = crypto.randomUUID();
-            const attachmentFileName = `${attachmentUuid}-attachment.md`;
+            const attachmentFileName = `${attachmentUuid}-attachment.txt`;
             
             await this.writeToBoth(allureResultsDir, runAllureResultsDir, attachmentFileName, inst.execution.details, generatedFiles);
             
             instAttachments.push({
               name: "Execution Details",
               source: attachmentFileName,
-              type: "text/markdown"
+              type: "text/plain"
             });
           }
 
