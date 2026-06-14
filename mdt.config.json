@@ -1,6 +1,6 @@
 {
   "api": {
-    "url": "http://localhost:8000"
+    "url": "http://192.168.1.3:8000"
   },
   "paths": {
     "features": "scenarios/features",
