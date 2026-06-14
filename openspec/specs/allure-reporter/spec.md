@@ -44,3 +44,18 @@ The reporter SHALL include parameters derived from the `execution` block to enri
 - **WHEN** `execution.actionExecuted` and `execution.telemetry` are present
 - **THEN** the Allure step includes a parameter for "Tool" using `actionExecuted`
 - **THEN** the Allure step includes parameters for "Execution Path", "Retries", "LLM Input Tokens", and "LLM Output Tokens" from the `telemetry` object.
+
+### Requirement: Allure Reporter labels the scenario with the used Engine
+The reporter SHALL parse the `mcp_config` from the execution API response (e.g., extracting the engine from `args` like `@playwright/mcp`) and add an "engine" label to the Allure scenario.
+
+#### Scenario: Execution returns MCP config with playwright
+- **WHEN** the raw execution data includes `mcp_config` with arguments indicating `@playwright/mcp`
+- **THEN** the reporter adds a label `{ name: 'engine', value: 'playwright' }` to the scenario
+
+#### Scenario: Execution returns MCP config with selenium
+- **WHEN** the raw execution data includes `mcp_config` with arguments indicating `@selenium/mcp`
+- **THEN** the reporter adds a label `{ name: 'engine', value: 'selenium' }` to the scenario
+
+#### Scenario: Execution has unknown or missing MCP config
+- **WHEN** the `mcp_config` is missing or its arguments cannot be parsed for an engine
+- **THEN** the reporter does not add an "engine" label or adds it as "unknown"

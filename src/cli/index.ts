@@ -162,6 +162,11 @@ program
           }
         }
 
+        // Inject mcp_config from payload into the result so reporters can access it
+        if (payload.mcp_config) {
+          result.mcp_config = payload.mcp_config;
+        }
+
         // 5. Save results
         console.log(`💾 Saving results...`);
         const savedPath = await storage.saveRawExecution(`${featureName}_${scenarioName}`, result);

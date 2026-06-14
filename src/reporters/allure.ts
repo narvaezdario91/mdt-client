@@ -5,7 +5,7 @@ import { IReporter } from './reporter.interface';
 
 export class AllureReporter implements IReporter {
   private async writeToBoth(
-    rootDir: string, runDir: string, fileName: string, 
+    rootDir: string, runDir: string, fileName: string,
     content: string, generatedFiles: string[]
   ): Promise<void> {
     const rootPath = path.join(rootDir, fileName);
@@ -28,6 +28,15 @@ export class AllureReporter implements IReporter {
 
     for (const exec of rawExecutions) {
       const uuid = crypto.randomUUID();
+
+      let engineName = 'unknown';
+      if (exec.mcp_config?.args && Array.isArray(exec.mcp_config.args)) {
+        const engineArg = exec.mcp_config.args.find((arg: string) => arg.includes('/mcp'));
+        if (engineArg) {
+          engineName = engineArg;
+        }
+      }
+
       const startTime = exec.createdAt ? new Date(exec.createdAt).getTime() : Date.now();
       const duration = exec.executionSummary?.executionTimeMs || 0;
       const stopTime = startTime + duration;
@@ -38,9 +47,9 @@ export class AllureReporter implements IReporter {
       const statusDetails = isSuccess
         ? {}
         : {
-            message: exec.executionSummary?.errorSummary || 'Scenario execution failed',
-            trace: exec.executionSummary?.errorSummary || ''
-          };
+          message: exec.executionSummary?.errorSummary || 'Scenario execution failed',
+          trace: exec.executionSummary?.errorSummary || ''
+        };
 
       const steps: any[] = [];
       let currentStepTime = startTime;
@@ -61,7 +70,7 @@ export class AllureReporter implements IReporter {
           const instDuration = inst.execution?.durationMs ?? 1000;
 
           const instAttachments: any[] = [];
-          
+
           // 3.2 Inyectar error
           const instStatusDetails = (instStatus === 'failed' && inst.execution?.error)
             ? { message: inst.execution.error }
@@ -71,9 +80,9 @@ export class AllureReporter implements IReporter {
           if (inst.execution?.details) {
             const attachmentUuid = crypto.randomUUID();
             const attachmentFileName = `${attachmentUuid}-attachment.txt`;
-            
+
             await this.writeToBoth(allureResultsDir, runAllureResultsDir, attachmentFileName, inst.execution.details, generatedFiles);
-            
+
             instAttachments.push({
               name: "Execution Details",
               source: attachmentFileName,
@@ -82,12 +91,15 @@ export class AllureReporter implements IReporter {
           }
 
           const instParams: any[] = [];
-          
+
+          // Add engine parameter
+          instParams.push({ name: "Engine", value: engineName });
+
           // 2.1 Tool name
           if (inst.execution?.actionExecuted) {
             instParams.push({ name: "Tool", value: inst.execution.actionExecuted });
           }
-          
+
           // 2.2 Telemetry
           if (inst.execution?.telemetry) {
             const t = inst.execution.telemetry;
@@ -96,8 +108,8 @@ export class AllureReporter implements IReporter {
               { name: "Retries", value: t.retries !== undefined ? String(t.retries) : undefined },
               { name: "LLM Input Tokens", value: t.llmTokens?.input !== undefined ? String(t.llmTokens.input) : undefined },
               { name: "LLM Output Tokens", value: t.llmTokens?.output !== undefined ? String(t.llmTokens.output) : undefined }
-            ].filter((p): p is {name: string, value: string} => p.value !== undefined);
-            
+            ].filter((p): p is { name: string, value: string } => p.value !== undefined);
+
             instParams.push(...telemetryParams);
           }
 
@@ -139,7 +151,11 @@ export class AllureReporter implements IReporter {
           { name: 'framework', value: 'mdt-orchestrator' },
           { name: 'language', value: 'typescript' },
           { name: 'feature', value: exec.featureName },
-          { name: 'suite', value: exec.featureName }
+          { name: 'suite', value: exec.featureName },
+          { name: 'engine', value: engineName }
+        ],
+        parameters: [
+          { name: 'Engine', value: engineName }
         ],
         links: [],
         name: exec.scenarioName,
