@@ -59,7 +59,7 @@ export class GherkinParser {
         
         // Very basic way to find keyword: Search through feature.children
         // Note: In a robust implementation we'd walk the AST, but since we just need "Given", "When", "Then" for UI/logs, we can extract it or default it.
-        // Actually, mdt-orchestrator's compiler just needs the text! Let's default keyword to empty string to keep ParsedStep signature, or find it.
+        // Actually, mdt-client's compiler just needs the text! Let's default keyword to empty string to keep ParsedStep signature, or find it.
         // We'll leave it as empty for now, as step.text is what really matters for yaml-resolver.
         parsedScenario.steps.push({
           keyword: '', 

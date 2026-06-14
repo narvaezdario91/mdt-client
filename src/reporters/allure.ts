@@ -148,7 +148,7 @@ export class AllureReporter implements IReporter {
         historyId: crypto.createHash('md5').update(`${exec.featureName}-${exec.scenarioName}`).digest('hex'),
         fullName: `${exec.featureName}: ${exec.scenarioName}`,
         labels: [
-          { name: 'framework', value: 'mdt-orchestrator' },
+          { name: 'framework', value: 'mdt-client' },
           { name: 'language', value: 'typescript' },
           { name: 'feature', value: exec.featureName },
           { name: 'suite', value: exec.featureName },

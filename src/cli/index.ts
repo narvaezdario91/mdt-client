@@ -26,8 +26,8 @@ function findFeaturesRecursive(dirPath: string): string[] {
 }
 
 program
-  .name('bdd-orchestrator')
-  .description('MDT Node.js BDD Orchestrator CLI')
+  .name('mdt-client')
+  .description('MDT-CLIENT — CLI de orquestación para Meta-Driven Testing')
   .version('1.0.0');
 
 program

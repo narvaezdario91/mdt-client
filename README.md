@@ -1,40 +1,95 @@
-# MDT Orchestrator (Model-Driven Testing)
+<p align="center">
+  <img src="assets/logo.png" alt="MDT-CLIENT Logo" width="200">
+</p>
 
-MDT Orchestrator es una herramienta CLI construida en Node.js diseñada para ejecutar pruebas de Comportamiento Guiado por Desarrollo (BDD) de manera ágil e inteligente. 
+<h1 align="center">MDT-CLIENT</h1>
 
-Se encarga de parsear escenarios Gherkin (`.feature`) y mapear sus pasos utilizando definiciones en archivos YAML (`.steps.yaml`). Luego, compila estos datos en un Payload que se envía a una API de Ejecución central, la cual, a través de servidores MCP (Model Context Protocol) como Playwright o Selenium, convierte las instrucciones de lenguaje natural en automatización web real.
+<p align="center">
+  <strong>Meta-Driven Testing — Cliente CLI de Orquestación</strong>
+</p>
 
-## Características Principales
+<p align="center">
+  <img src="https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen?style=flat-square&logo=node.js" alt="Node.js">
+  <img src="https://img.shields.io/badge/TypeScript-5+-blue?style=flat-square&logo=typescript" alt="TypeScript">
+  <img src="https://img.shields.io/badge/licencia-MIT-green?style=flat-square" alt="Licencia MIT">
+  <img src="https://img.shields.io/badge/versión-1.0.0-orange?style=flat-square" alt="Versión">
+</p>
 
-- **Configuración Centralizada:** Control total mediante `mdt.config.json` (rutas, endpoints, clientes MCP).
-- **Golden Copy (Cache Replay):** Inyección a nivel de instrucciones de ejecuciones exitosas previas para omitir pasos ya validados y acelerar la ejecución de pruebas.
-- **MCP Dinámico:** Configuración inyectable para soportar cualquier tipo de servidor MCP sin tocar el código fuente.
-- **Reportes Múltiples (Multi-Reporters):** Generación pluggable de reportes (Cucumber JSON, HTML visual, Allure 2) y almacenamiento inmutable de logs crudos del API.
+<p align="center">
+  MDT-CLIENT es una herramienta CLI construida en Node.js que ejecuta pruebas BDD de manera ágil e inteligente.<br>
+  Parsea escenarios Gherkin (<code>.feature</code>), mapea pasos con definiciones YAML (<code>.steps.yaml</code>),<br>
+  y orquesta la automatización web a través de servidores MCP (Model Context Protocol).
+</p>
 
 ---
 
-## Requisitos Previos
+## 📋 Tabla de Contenidos
 
-- [Node.js](https://nodejs.org/) v18+
-- [Execution API](https://github.com/tu-usuario/openspec-api) corriendo localmente (por defecto en `http://localhost:8000`).
+- [Quick Start](#-quick-start)
+- [Requisitos Previos](#-requisitos-previos)
+- [Instalación](#-instalación)
+- [Configuración](#%EF%B8%8F-configuración)
+- [Uso del CLI](#-uso-del-cli)
+- [Sistema de Reportes](#-sistema-de-reportes)
+- [Arquitectura](#-arquitectura)
+- [Golden Copy (Cache Replay)](#-golden-copy-cache-replay)
+- [Estructura del Proyecto](#-estructura-del-proyecto)
+- [Contribución](#-contribución)
+- [Licencia](#-licencia)
 
 ---
 
-## Instalación
+## 🚀 Quick Start
 
-Clona el repositorio e instala las dependencias:
+Pon MDT-CLIENT en funcionamiento en **4 pasos**:
 
 ```bash
-git clone <repo-url>
-cd mdt-orchestrator
+# 1. Clonar el repositorio
+git clone https://github.com/narvaezdario91/mdt-client.git
+cd mdt-client
+
+# 2. Instalar dependencias
 npm install
+
+# 3. Configurar (verificar que la Execution API esté corriendo)
+# El archivo mdt.config.json ya viene preconfigurado con valores por defecto
+
+# 4. Ejecutar tus escenarios
+npm run dev run
+```
+
+> 💡 **Tip:** Asegúrate de que tu [Execution API](https://github.com/narvaezdario91/mdt-client) esté corriendo en `http://localhost:8000` antes de ejecutar.
+
+---
+
+## 📦 Requisitos Previos
+
+| Requisito | Versión |
+|-----------|---------|
+| [Node.js](https://nodejs.org/) | v18+ |
+| Execution API | Corriendo localmente (por defecto en `http://localhost:8000`) |
+
+---
+
+## 📥 Instalación
+
+```bash
+git clone https://github.com/narvaezdario91/mdt-client.git
+cd mdt-client
+npm install
+```
+
+Para compilar el proyecto a JavaScript:
+
+```bash
+npm run build
 ```
 
 ---
 
-## Configuración (`mdt.config.json`)
+## ⚙️ Configuración
 
-Para evitar enviar parámetros constantemente a través del CLI, puedes crear un archivo `mdt.config.json` en la raíz del proyecto. Este archivo rige el comportamiento completo del framework:
+MDT-CLIENT se configura mediante un archivo `mdt.config.json` en la raíz del proyecto. Este archivo controla el comportamiento completo del framework:
 
 ```json
 {
@@ -59,118 +114,243 @@ Para evitar enviar parámetros constantemente a través del CLI, puedes crear un
 }
 ```
 
+### Detalle de Campos
+
+| Sección | Campo | Descripción | Default |
+|---------|-------|-------------|---------|
+| `api` | `url` | URL de la API de Ejecución | `http://localhost:8000` |
+| `paths` | `features` | Ruta a archivos/directorio `.feature` | — |
+| `paths` | `steps` | Ruta al directorio de archivos `.steps.yaml` | — |
+| `paths` | `reports` | Directorio de salida de reportes | `executions/reports` |
+| `paths` | `cache` | Directorio de Golden Copy (cache) | `executions/cache` |
+| `execution` | `useCache` | Activar/desactivar Cache Replay | `true` |
+| `execution` | `report` | Formatos de reporte (separados por coma) | — |
+| `mcp` | `type` | Tipo de conexión MCP | `stdio` |
+| `mcp` | `command` | Comando para iniciar el servidor MCP | — |
+| `mcp` | `args` | Argumentos del comando MCP | — |
+
 ---
 
-## Ejecución Básica
+## 💻 Uso del CLI
 
-Si ya tienes configurado tu `mdt.config.json`, simplemente ejecuta:
+### Ejecución Básica
+
+Si tienes configurado `mdt.config.json`, simplemente ejecuta:
 
 ```bash
 npm run dev run
 ```
 
-Si prefieres usar comandos explícitos o sobrescribir la configuración, puedes pasar flags al CLI:
+### Sobrescribir Configuración con Flags
 
 ```bash
-npm run dev run -- --features escenarios/features/mi_prueba.feature --steps escenarios/steps --api-url http://localhost:8000
+npm run dev run -- --features scenarios/features/mi_prueba.feature --steps scenarios/steps --api-url http://localhost:8000
 ```
+
+### Flags Disponibles
+
+| Flag | Descripción | Default |
+|------|-------------|---------|
+| `-f, --features <path>` | Ruta a un archivo o directorio `.feature` | *Desde config* |
+| `-s, --steps <path>` | Ruta al directorio de archivos `.steps.yaml` | *Desde config* |
+| `-u, --api-url <url>` | URL de la API de Ejecución | `http://localhost:8000` |
+| `--no-cache` | Desactiva Golden Copy (re-ejecuta todo desde cero) | `false` |
+| `--report <formats>` | Formatos de reporte separados por coma (e.g., `cucumber,html,allure`) | *Desde config* |
 
 ---
 
-## Opciones y Flags del CLI
+## 📊 Sistema de Reportes
 
-| Flag | Descripción | Default (si no está en config) |
-|------|-------------|--------------------------------|
-| `-f, --features <path>` | Ruta a un archivo o directorio `.feature`. | *Requerido* |
-| `-s, --steps <path>` | Ruta al directorio que contiene los archivos `.steps.yaml`. | *Requerido* |
-| `-u, --api-url <url>` | URL de la API de Ejecución (Execution API). | `http://localhost:8000` |
-| `--no-cache` | Desactiva el Golden Copy (re-ejecuta todo desde cero ignorando cachés). | *Falso* |
-| `--report <formats>` | Genera reportes de ejecución en múltiples formatos separados por comas (e.g., `cucumber,html,allure`). | *Ninguno* |
-
-## Sistema de Reportes (Multi-Reporters)
-
-El framework incluye un sistema de reportes extensible que utiliza los patrones de diseño *Strategy* y *Factory* para permitir la generación simultánea de múltiples reportes de ejecución.
+MDT-CLIENT incluye un sistema de reportes extensible que utiliza los patrones de diseño **Strategy** y **Factory** para generar múltiples reportes de forma simultánea.
 
 ### Formatos Soportados
 
-1. **Cucumber JSON (`cucumber`)**: Genera el archivo estándar `cucumber-report.json` compatible con herramientas CI/CD y visores tradicionales.
-2. **HTML Básico (`html`)**: Produce un reporte HTML visual interactivo e independiente (`cucumber-report.html`) utilizando la librería `cucumber-html-reporter`.
-3. **Allure 2 (`allure`)**: Genera archivos JSON de resultados compatibles con Allure 2 en la carpeta `allure-results/` a nivel de raíz y de ejecución, listos para servir con `allure serve`.
+| Formato | Clave | Descripción |
+|---------|-------|-------------|
+| **Cucumber JSON** | `cucumber` | Archivo estándar `cucumber-report.json` compatible con CI/CD |
+| **HTML Visual** | `html` | Reporte HTML interactivo e independiente (`cucumber-report.html`) |
+| **Allure 2** | `allure` | Resultados JSON compatibles con Allure 2 en `allure-results/` |
 
-### Registro Crudo Inmutable (Raw execution log)
+### Uso
 
-Independientemente de los reporteros seleccionados, el orquestador **siempre** guarda el log exacto de lo que retornó la API de ejecución en un archivo llamado `raw-executions.json` dentro de la carpeta del Run ID correspondiente para fines de auditoría e historial.
-
-### Ejemplos de Uso
-
-Generar múltiples reportes de forma simultánea:
 ```bash
+# Un solo formato
+npm run dev run -- --report cucumber
+
+# Múltiples formatos simultáneos
 npm run dev run -- --report cucumber,html,allure
 ```
 
-También puedes especificar el reporte por defecto en tu archivo de configuración `mdt.config.json`:
+O configúralo por defecto en `mdt.config.json`:
+
 ```json
+{
   "execution": {
-    "useCache": true,
     "report": "cucumber,html,allure"
   }
+}
 ```
 
-### Rutas de Salida de Reportes
+### Registro Crudo Inmutable
 
-Los reportes se organizan de forma estructurada en el directorio correspondiente a cada ejecución:
-- **Resultados Crudos**: `executions/reports/run_<timestamp>/raw-executions.json`
-- **Cucumber JSON**: `executions/reports/run_<timestamp>/cucumber-report.json`
-- **Reporte HTML**: `executions/reports/run_<timestamp>/cucumber-report.html`
-- **Allure 2 Results**: `allure-results/` (acumulado a nivel raíz) y `executions/reports/run_<timestamp>/allure-results/` (aislado por ejecución)
+Independientemente de los reporteros seleccionados, MDT-CLIENT **siempre** guarda el log exacto de lo retornado por la API en `raw-executions.json` dentro de la carpeta del Run ID, para fines de auditoría e historial.
+
+### Rutas de Salida
+
+| Reporte | Ruta |
+|---------|------|
+| Resultados crudos | `executions/reports/run_<timestamp>/raw-executions.json` |
+| Cucumber JSON | `executions/reports/run_<timestamp>/cucumber-report.json` |
+| HTML | `executions/reports/run_<timestamp>/cucumber-report.html` |
+| Allure (por ejecución) | `executions/reports/run_<timestamp>/allure-results/` |
+| Allure (acumulado) | `allure-results/` |
 
 ### Visualización de Reportes Allure
 
-Dado que Allure 2 genera archivos JSON de resultados independientes por cada escenario, se requiere la herramienta de línea de comandos de Allure para compilar y visualizar el reporte final en el navegador:
+```bash
+# Instalar Allure CLI (si no lo tienes)
+npm install -g allure-commandline
 
-1. **Instalación de Allure CLI** (si no lo tienes instalado):
-   - **Vía NPM** (Global o de desarrollo):
-     ```bash
-     npm install -g allure-commandline
-     ```
-   - **macOS** (Homebrew): `brew install allure`
-   - **Windows** (Scoop): `scoop install allure`
+# Servir reporte interactivo
+allure serve allure-results
 
-2. **Servir el reporte interactivo**:
-   Ejecuta el siguiente comando en la raíz del proyecto para levantar un servidor web local temporal que cargue y muestre el panel interactivo de Allure:
-   ```bash
-   allure serve allure-results
-   ```
-
-3. **Generar reporte estático**:
-   Si quieres exportar un sitio web estático autocontenido del reporte (por ejemplo, para integradores CI/CD o servidores web estáticos):
-   ```bash
-   allure generate allure-results --clean -o allure-report
-   ```
-   Esto creará la carpeta estática `allure-report/`.
+# Generar sitio estático
+allure generate allure-results --clean -o allure-report
+```
 
 ---
 
-## Estructura de Proyecto Sugerida
+## 🏗️ Arquitectura
 
-```text
-mdt-orchestrator/
-├── src/                    # Código fuente del CLI y Orchestrator
-├── scenarios/
-│   ├── features/           # Archivos Gherkin (.feature)
-│   └── steps/              # Definiciones en Lenguaje Natural (.steps.yaml)
-├── executions/
-│   ├── reports/            # Reportes y resultados en bruto por ejecución (Run ID)
-│   └── cache/              # Archivos Golden Copy (ejecuciones exitosas reusables)
-├── mdt.config.json         # Configuración centralizada
-└── package.json            # Dependencias y scripts
+MDT-CLIENT sigue un flujo de ejecución lineal y modular:
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                        FLUJO DE EJECUCIÓN MDT-CLIENT                    │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                         │
+│  ┌──────────┐    ┌──────────────┐    ┌──────────────┐    ┌───────────┐ │
+│  │  Gherkin  │───▶│  Compilador  │───▶│ API Client   │───▶│ Reporters │ │
+│  │ .feature  │    │  + YAML      │    │   (Axios)    │    │ (Strategy)│ │
+│  └──────────┘    └──────┬───────┘    └──────────────┘    └───────────┘ │
+│                         │                                               │
+│                         ▼                                               │
+│                  ┌──────────────┐                                        │
+│                  │ Cache Replay │  ◀── Inyección de Golden Copy          │
+│                  │  (Optimizer) │      a nivel de instrucción            │
+│                  └──────────────┘                                        │
+│                                                                         │
+│  Módulos:                                                               │
+│  ├── src/parsers/     → Gherkin Parser + YAML Resolver                 │
+│  ├── src/core/        → Compiler, API Client, Cache Replay, Storage    │
+│  ├── src/models/      → Schemas (Zod) + Config Types                   │
+│  └── src/reporters/   → Cucumber, HTML, Allure (Factory + Strategy)    │
+│                                                                         │
+└─────────────────────────────────────────────────────────────────────────┘
 ```
 
-## Arquitectura de Golden Copy (Cache Replay)
+### Flujo Paso a Paso
 
-El orquestador optimiza masivamente el tiempo de ejecución mediante un algoritmo de *Merge a Nivel de Instrucción*:
+1. **Parseo**: Lee archivos `.feature` (Gherkin) y resuelve las definiciones de pasos desde `.steps.yaml`.
+2. **Compilación**: Genera un payload estructurado y validado con Zod.
+3. **Cache Replay**: Si hay Golden Copy disponible, inyecta resultados exitosos previos a nivel de instrucción.
+4. **Ejecución**: Envía el payload a la Execution API, que utiliza servidores MCP para la automatización.
+5. **Almacenamiento**: Guarda resultados crudos y actualiza el cache si la ejecución fue exitosa.
+6. **Reportes**: Genera reportes en los formatos solicitados usando el patrón Strategy + Factory.
 
-1. **Lectura**: Al compilar un escenario, el orquestador busca si existe un caché previo en `paths.cache`.
-2. **Comparación Fina**: Hace *match* del texto de cada paso (Gherkin) y de cada instrucción interna de YAML.
-3. **Inyección**: Si los textos coinciden exactamente con la ejecución exitosa anterior, inyecta el estado `success` y el código generado por la API subyacente.
-4. **Interrupción**: En el primer desvío (modificaste una palabra en el `.feature` o el `.steps.yaml`), el orquestador deja de inyectar caché para obligar a la API a ejecutar en tiempo real el nuevo flujo.
+---
+
+## 📦 Golden Copy (Cache Replay)
+
+MDT-CLIENT optimiza los tiempos de ejecución mediante un algoritmo de **Merge a Nivel de Instrucción**:
+
+```
+┌──────────────────────────────────────────────────────┐
+│              ALGORITMO DE CACHE REPLAY                │
+├──────────────────────────────────────────────────────┤
+│                                                       │
+│  1. LECTURA                                          │
+│     Busca caché previo en paths.cache                │
+│                  │                                    │
+│                  ▼                                    │
+│  2. COMPARACIÓN FINA                                 │
+│     Match del texto de cada paso e instrucción       │
+│                  │                                    │
+│         ┌───────┴───────┐                            │
+│         ▼               ▼                            │
+│    ¿Coincide?     ¿Desvío?                           │
+│         │               │                            │
+│         ▼               ▼                            │
+│  3. INYECCIÓN    4. INTERRUPCIÓN                     │
+│     Inyecta         Deja de inyectar                 │
+│     success +       caché, API ejecuta               │
+│     código          en tiempo real                   │
+│     generado                                         │
+│                                                       │
+└──────────────────────────────────────────────────────┘
+```
+
+- **Lectura**: Al compilar un escenario, busca si existe un caché previo.
+- **Comparación Fina**: Hace match del texto de cada paso (Gherkin) y cada instrucción interna de YAML.
+- **Inyección**: Si los textos coinciden exactamente con la ejecución exitosa anterior, inyecta el estado `success` y el código generado.
+- **Interrupción**: En el primer desvío (modificación en `.feature` o `.steps.yaml`), deja de inyectar caché para forzar ejecución real.
+
+---
+
+## 📁 Estructura del Proyecto
+
+```
+mdt-client/
+├── src/
+│   ├── cli/                # Punto de entrada CLI (Commander)
+│   │   └── index.ts        # Configuración de comandos y flujo principal
+│   ├── core/
+│   │   ├── api-client.ts   # Cliente HTTP para la Execution API
+│   │   ├── cache-replay.ts # Algoritmo de Golden Copy
+│   │   ├── compiler.ts     # Compilador de Features → Payload
+│   │   └── storage.ts      # Gestión de archivos (reportes, cache)
+│   ├── models/
+│   │   ├── config.ts       # Tipos de configuración (MDTConfig)
+│   │   └── payload.schema.ts # Schema Zod para validación de payloads
+│   ├── parsers/
+│   │   ├── gherkin-parser.ts # Parser de archivos .feature
+│   │   └── yaml-resolver.ts  # Resolver de definiciones .steps.yaml
+│   └── reporters/
+│       ├── allure.ts       # Reporter Allure 2
+│       ├── cucumber.ts     # Reporter Cucumber JSON
+│       ├── factory.ts      # Factory de reporters
+│       ├── html.ts         # Reporter HTML visual
+│       └── reporter.interface.ts # Interfaz común de reporters
+├── scenarios/
+│   ├── features/           # Archivos Gherkin (.feature)
+│   └── steps/              # Definiciones de pasos (.steps.yaml)
+├── executions/
+│   ├── reports/            # Reportes por ejecución (Run ID)
+│   └── cache/              # Golden Copy (ejecuciones exitosas)
+├── assets/
+│   └── logo.png            # Logo del proyecto
+├── mdt.config.json         # Configuración centralizada
+├── tsconfig.json           # Configuración TypeScript
+├── package.json            # Dependencias y scripts
+├── LICENSE                 # Licencia MIT
+├── CONTRIBUTING.md         # Guía de contribución
+└── CHANGELOG.md            # Historial de cambios
+```
+
+---
+
+## 🤝 Contribución
+
+¡Las contribuciones son bienvenidas! Por favor lee la [Guía de Contribución](CONTRIBUTING.md) para conocer las pautas del proyecto.
+
+---
+
+## 📄 Licencia
+
+Este proyecto está licenciado bajo la **Licencia MIT**. Consulta el archivo [LICENSE](LICENSE) para más detalles.
+
+---
+
+<p align="center">
+  Desarrollado con ❤️ por <a href="https://github.com/narvaezdario91">Dario Narvaez</a>
+</p>

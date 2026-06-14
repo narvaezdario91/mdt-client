@@ -40,3 +40,6 @@ executions/
 # Allure
 allure-results/
 allure-report/
+
+# Agent
+.agent/
