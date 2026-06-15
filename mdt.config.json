@@ -1,6 +1,6 @@
 {
   "api": {
-    "url": "https://443c-190-1-227-82.ngrok-free.app"
+    "url": "https://localhost:8000"
   },
   "paths": {
     "features": "scenarios/features",
