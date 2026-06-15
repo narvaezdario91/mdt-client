@@ -17,7 +17,7 @@
     "command": "npx",
     "args": [
       "-y",
-      "@playwright/mcp"
+      "@angiejones/mcp-selenium"
     ]
   }
 }
