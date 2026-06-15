@@ -56,4 +56,4 @@
 
 "el carrito muestra el mensaje {message}":
   instructions:
-    - "Verifica que se muestre el texto '{message}'"
+    - "Verifica que la pagina contenga el texto '{message}'"
