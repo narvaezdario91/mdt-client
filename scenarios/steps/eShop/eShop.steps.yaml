@@ -1,10 +1,10 @@
 "el usuario navega a la tienda eShop":
   instructions:
-    - "Navega a la URL: https://192.168.1.7:7298"
+    - "Navega a la URL: https://907d-190-1-227-82.ngrok-free.app"
 
 "el usuario se autentica en eShop":
   instructions:
-    - "Navega a la URL: https://192.168.1.7:7298"
+    - "Navega a la URL: https://907d-190-1-227-82.ngrok-free.app"
     - "Da click en el enlace con icono que permite el inicio de sesión"
     - "Escribe 'alice' en el campo Username"
     - "Escribe 'Pass123$' en el campo Password"
@@ -12,7 +12,7 @@
 
 "el usuario inicia sesión con usuario {username} y contraseña {password}":
   instructions:
-    - "Navega a la URL: https://192.168.1.7:7298"
+    - "Navega a la URL: https://907d-190-1-227-82.ngrok-free.app"
     - "Da click en el enlace con icono que permite el inicio de sesión"
     - "Escribe '{username}' en el campo Username"
     - "Escribe '{password}' en el campo Password"
