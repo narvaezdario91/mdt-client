@@ -16,9 +16,8 @@
     "type": "stdio",
     "command": "npx",
     "args": [
-      "-y",
-      "@playwright/mcp",
-      "--isolated"
+      "-y", 
+      "@angiejones/mcp-selenium"
     ]
   }
 }
