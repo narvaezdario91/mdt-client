@@ -9,7 +9,7 @@
     "cache": "executions/cache"
   },
   "execution": {
-    "useCache": true,
+    "useCache": false,
     "report": "allure"
   },
   "mcp": {
@@ -17,7 +17,8 @@
     "command": "npx",
     "args": [
       "-y", 
-      "@angiejones/mcp-selenium"
+      "@playwright/mcp",
+      "--isolated"
     ]
   }
 }
